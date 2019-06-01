@@ -5,6 +5,11 @@ library(magrittr)
 source("src/utils/not_in.R")
 
 # Define core functions ####
+startSession <- function(...) {
+  rD <-rsDriver(...)
+  remDr <- rD$client
+  return(remDr)
+}
 loginFB <- function(remDr, login_url, my_email, my_pass) {
   remDr$navigate(login_url)
   
@@ -68,21 +73,20 @@ make_get_remDr <- function(using = "css", value, elem = "text", method = "one") 
       }
     } else if (method == "all") {
       elements <- remDr$findElements(using = using, value = value)
-      element <- sapply(elements, get_elem)
+      element <- map(elements, get_elem)
     }
     
     
-    element <- unlist(element)
+    # element <- unlist(element)
     
     element
   }
 }
 # Start Session ####
-rD <- rsDriver(port = 4567L, 
-                browser = "chrome", 
-                chromever = "74.0.3729.6", 
-                verbose = FALSE)
-remDr <- rD$client
+remDr <- startSession(port = 4567L, 
+                      browser = "chrome", 
+                      chromever = "74.0.3729.6", 
+                      verbose = FALSE)
 
 # Login ####
 my_email <- read_rds("data/my_email.rds")
@@ -101,11 +105,35 @@ get_permalinks <- make_get_remDr(using = "css",
 get_sumr_texts <- make_get_remDr(using = "css", 
                                  value = "[data-testid='post_message']", 
                                  method = "all")
-sumrText <- get_sumr_texts(remDr)
-permalink <- get_permalinks(remDr)
 
-posts_tbl <- tibble(sumrText = sumrText,
-                    permalink = permalink)
+permalink <- get_permalinks(remDr)
+sumrText <- get_sumr_texts(remDr)
+
+posts_list <- list(permalink = list(permalink))
+
+# x <- list(x = 1:10, y = 4, z = list(a = 1, b = 2))
+# str(x)
+# 
+# # Update values
+# str(list_modify(x, a = 1))
+# # Replace values
+# str(list_modify(x, z = 5))
+# str(list_modify(x, z = list(a = 1:5)))
+# 
+# # Remove values
+# str(list_modify(x, z = zap()))
+# 
+# # Combine values
+# str(x)
+# 
+# str(list_merge(x, x = 11, z = list(a = 2:5, c = 3)))
+# 
+# 
+# # All these functions support tidy dots features. Use !!! to splice
+# # a list of arguments:
+# l <- list(new = 1, y = zap(), z = 5)
+# str(list_modify(x, !!!l))
+
 
 # Now ####
 process_post <- function(remDr, link) {
@@ -148,16 +176,22 @@ process_post <- function(remDr, link) {
       out
 }
 
-enrich_post_tbl <- function(posts_tbl, remDr){
-  #select wich posts to enrich
+process_post(remDr, posts_list[["permalink"]][1])
+
+enrich_post_tbl <- function(posts_list, remDr){
+  # checar nome das colunas de posts_tbl
+  currentAttributes <- names(posts_list)
+  
+  for (i in 1:nrow(posts_tbl)){
+    process_post(remDr, posts_tbl[i, 'permalink'])
+  }
+  
   # process the link
   # add the columns
-  posts_tbl
+  enriched_posts_tbl
 }
 
 
-link <- posts_tbl[2,'permalink']
-process_post(remDr, link)
 
 
 
