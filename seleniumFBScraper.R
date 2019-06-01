@@ -2,16 +2,20 @@ library(RSelenium)
 library(tidyverse)
 library(magrittr)
 
-#Start Session
-rD <- rsDriver(port = 4567L, browser = "chrome", verbose = FALSE)
+
+# Start Session ####
+rD <- rsDriver(port = 4567L, 
+                browser = "chrome", 
+                chromever = "74.0.3729.6", 
+                verbose = FALSE)
 remDr <- rD$client
 
-#Define Login Vars
+# Define Login Vars ####
 login_url <- "http://www.facebook.com"
 my_email <- list("giovaniferreira")
 my_pass <- list("CaraAmassada1")
 
-#Login
+# Login ####
 loginFB <- function(remDr, login_url, my_email, my_pass) {
   remDr$navigate(login_url)
   
@@ -27,15 +31,11 @@ loginFB <- function(remDr, login_url, my_email, my_pass) {
 
 loginFB(remDr, login_url, my_email, my_pass)
 
-#Define Group Vars
+# Define Group Vars ####
 group_url <- "https://www.facebook.com/groups/910141242384839/?sorting_setting=CHRONOLOGICAL"
 
-#Go to group
+# Go to group ####
 remDr$navigate(group_url)
-
-postsLinks <- remDr$findElements(using = "css", value = "._5pcq")
-
-posts_tbl <- tibble(permalink = character())
 
 get_texts <- function(post) {
   out <- tryCatch(
@@ -45,13 +45,11 @@ get_texts <- function(post) {
     error=function(cond) {
       message("Error")
       message(cond)
-      # Choose a return value in case of error
       return(NA)
     },
     warning=function(cond) {
       message("Warning")
       message(cond)
-      # Choose a return value in case of warning
       return(NULL)
     },
     finally={
@@ -59,7 +57,6 @@ get_texts <- function(post) {
   )    
   return(out)
 }
-
 get_permalink <- function(post) {
   out <- tryCatch(
     {
@@ -68,13 +65,11 @@ get_permalink <- function(post) {
     error=function(cond) {
       message("Error")
       message(cond)
-      # Choose a return value in case of error
       return(NA)
     },
     warning=function(cond) {
       message("Warning")
       message(cond)
-      # Choose a return value in case of warning
       return(NULL)
     },
     finally={
@@ -83,8 +78,93 @@ get_permalink <- function(post) {
   return(out)
 }
 
+postsLinks <- remDr$findElements(using = "css", value = "._5pcq")
+postsTexts <- remDr$findElements(using = "css", value = "[data-testid='post_message']")
+
+posts_tbl <- tibble(sumrTexts = character(),
+                     permalink = character())
+
+tmp_main <- tibble(sumrTexts = sapply(postsTexts, get_texts),
+                   permalink = sapply(postsLinks, get_permalink))
+
+
+
+get_poster <- function(post){
+  out <- tryCatch(
+    {
+      unlist(post$getElementText())
+    },
+    error=function(cond) {
+      message("Error")
+      message(cond)
+      return(NA)
+    },
+    warning=function(cond) {
+      message("Warning")
+      message(cond)
+      return(NULL)
+    },
+    finally={
+    }
+  )    
+  return(out)  
+}
+
+
+
+open_link_nw <- function(post) {
+  out <- tryCatch(
+    {
+      link <- unlist(post$getElementAttribute("href"))
+      mainWindow <- remDr$getCurrentWindowHandle()
+      script <- paste0('window.open("', link, '", "windowName", "height=768,width=1024");')
+      remDr$executeScript(script)
+      newWindow <- remDr$getWindowHandles()[[2]]
+      remDr$switchToWindow(newWindow)
+      postPoster <- remDr$findElement(using = "css", value = "._q7o .profileLink")
+      authorProfile <- postPoster$getElementText()
+      authorName <- postPoster$getElementText()
+      remDr$closeWindow()
+      remDr$switchToWindow(mainWindow[[1]])
+      tbl <- tibble(authorName = authorName[[1]],
+                    authorProfile = authorProfile[[1]])
+      tbl
+    },
+    error=function(cond) {
+      message("Error")
+      message(cond)
+      return(NA)
+    },
+    warning=function(cond) {
+      message("Warning")
+      message(cond)
+      return(NULL)
+    },
+    finally={
+    }
+  )    
+  return(out)
+}
+
+
+
+post <- postsLinks[[1]]
+open_link_nw(post)
+
+sapply(postsLinks, open_link_nw)
+
+#open each link in new window
+#scrape information from each tab
+#close each tab
+#return to main tab
+#scroll down
+#get new links and sumr texts, discarding old ones
+#repeat
+
 posts_tbl %<>%
-  add_row(permalink = sapply(postsLinks, get_permalink))
+  bind_rows(temp_tbl)
+
+remDr$win
 
 
 
