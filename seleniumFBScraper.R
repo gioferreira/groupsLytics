@@ -57,10 +57,11 @@ get_link_elem <- function(elem = "text") {
       })
   }
 }
-make_get_remDr <- function(using = "css", 
-                           value, 
-                           elem = "text", 
-                           method = "one", 
+make_get_remDr <- function(using = "css",  # Argument passed to find_element and them RSelenium
+                           value, # Argument passed to find_element and them RSelenium
+                           elem = "text", # What to extract from links? text or url?
+                           method = "one", # First element or all of them
+                           simplify = "true", # Unlist when length == 1
                            attrName = NULL) {
   if (elem %!in% c("text", "url")) {
     stop('Unknown elem')
@@ -88,9 +89,51 @@ make_get_remDr <- function(using = "css",
         return(x)
       }
       element <- map(element, set_names, nm = attrName)
-      
+      if (length(element) == 1) {
+        element <- unlist(element)
+      }
       element
     }
+}
+
+process_post <- function(remDr, link) {
+  get_author_name <- make_get_remDr(using = "css", 
+                                    value = '.fwb  [ajaxify*="member_bio"]',
+                                    elem = "text")
+  get_author_link <- make_get_remDr(using = "css", 
+                                    value = '.fwb  [ajaxify*="member_bio"]',
+                                    elem = "url")
+  get_interactions <- make_get_remDr(using = "css", 
+                                     value = "._81hb",
+                                     elem = "text")
+  get_comments_counter <- make_get_remDr(using = "css", 
+                                         value = '[data-testid*="CommentsCount"',
+                                         elem = "text")
+  get_post_message <- make_get_remDr(using = "css", 
+                                     value = '[data-testid*="post_message"',
+                                     elem = "text")
+  
+  mainWindow <- unlist(remDr$getCurrentWindowHandle())
+  script <- paste0('window.open("', link, '", "windowName", "height=768,width=1024");')
+  remDr$executeScript(script)
+  newWindow <- remDr$getWindowHandles()[[2]]
+  remDr$switchToWindow(newWindow)
+  
+  authorName <- get_author_name(remDr)
+  authorLink <- get_author_link(remDr)
+  interactionsCounter <- get_interactions(remDr)
+  commentsCounter <- get_comments_counter(remDr)
+  postMessage <- get_post_message(remDr)
+  
+  remDr$closeWindow()
+  remDr$switchToWindow(mainWindow)
+  
+  out <- list(authorName = authorName,
+              authorLink = authorLink,
+              interactionsCounter = interactionsCounter,
+              commentsCounter = commentsCounter,
+              postMessage = postMessage)
+  out
 }
 # Start Session ####
 remDr <- startSession(port = 4567L, 
@@ -123,73 +166,25 @@ sumrText <- get_sumr_texts(remDr)
 
 posts_list <- map2(permalink, sumrText, append)
 
-# Now ####
-process_post <- function(remDr, link) {
-      get_author_name <- make_get_remDr(using = "css", 
-                                        value = '.fwb  [ajaxify*="member_bio"]',
-                                        elem = "text")
-      get_author_link <- make_get_remDr(using = "css", 
-                                        value = '.fwb  [ajaxify*="member_bio"]',
-                                        elem = "url")
-      get_interactions <- make_get_remDr(using = "css", 
-                                         value = "._81hb",
-                                         elem = "text")
-      get_comments_counter <- make_get_remDr(using = "css", 
-                                             value = '[data-testid*="CommentsCount"',
-                                             elem = "text")
-      get_post_message <- make_get_remDr(using = "css", 
-                                         value = '[data-testid*="post_message"',
-                                         elem = "text")
-      
-      mainWindow <- unlist(remDr$getCurrentWindowHandle())
-      script <- paste0('window.open("', link, '", "windowName", "height=768,width=1024");')
-      remDr$executeScript(script)
-      newWindow <- remDr$getWindowHandles()[[2]]
-      remDr$switchToWindow(newWindow)
-      
-      authorName <- get_author_name(remDr)
-      authorLink <- get_author_link(remDr)
-      interactionsCounter <- get_interactions(remDr)
-      commentsCounter <- get_comments_counter(remDr)
-      postMessage <- get_post_message(remDr)
-  
-      remDr$closeWindow()
-      remDr$switchToWindow(mainWindow)
-      
-      out <- list(authorName = authorName,
-                    authorLink = authorLink,
-                    interactionsCounter = interactionsCounter,
-                    commentsCounter = commentsCounter,
-                    postMessage = postMessage)
-      out
-}
-
+# Enter on each permalink and extract post features  ####
 process_post(remDr, posts_list[["permalink"]][1])
 
 enrich_post_list <- function(posts_list, remDr){
   f <- function(x) {
     r <- process_post(remDr, x[['permalink']])
     x <- append(x, r)
+    r
   }
   posts_list <- map(posts_list, f)
   posts_list
-
-  # currentAttributes <- names(posts_list)
-  # 
-  # for (i in 1:nrow(posts_tbl)){
-  #   process_post(remDr, posts_tbl[i, 'permalink'])
-  # }
-  # 
-  # # process the link
-  # # add the columns
-  # enriched_posts_tbl
 }
 
-enriched_posts_list <- enrich_post_list(posts_list, remDr)
+enriched_posts_list <- enrich_post_list(posts_list[1:3], remDr)
 
 
+#### NOW ###
 
-#scroll down
+# scroll down ####
 #get new links and sumr texts
 #enrich those
 #repeat
