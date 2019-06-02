@@ -5,11 +5,6 @@ library(purrr)
 source("src/utils/not_in.R")
 
 # Define core functions ####
-startSession <- function(...) {
-  rD <-rsDriver(...)
-  remDr <- rD$client
-  return(remDr)
-}
 loginFB <- function(remDr, login_url, my_email, my_pass) {
   remDr$navigate(login_url)
   
@@ -59,7 +54,6 @@ makeGetRemDr <- function(using = "css",  # Argument passed to findElement and th
                          value, # Argument passed to findElement and them RSelenium
                          elem = "text", # What to extract from links? text or url?
                          method = "one", # First element or all of them
-                         simplify = "true", # Unlist when length == 1
                          attrName = NULL) {
   if (elem %!in% c("text", "url")) {
     stop('Unknown elem')
@@ -70,7 +64,7 @@ makeGetRemDr <- function(using = "css",  # Argument passed to findElement and th
   if (is.null(attrName)) {
     attrName <- elem
   }
-  get_function <- function(remDr) {
+  get_function <- function(remDr, simplify = TRUE){ # Unlist when length == 1) {
     get_elem <- getLinkElem(elem)
     if (method == "one") {
       # element <- remDr$findElement(using = using, value = value)
@@ -87,13 +81,13 @@ makeGetRemDr <- function(using = "css",  # Argument passed to findElement and th
       return(x)
     }
     element <- map(element, set_names, nm = attrName)
-    if (length(element) == 1) {
+    if (simplify == TRUE & length(element) == 1) {
       element <- unlist(element)
     }
     element
   }
 }
-process_post <- function(remDr, link) {
+processPost <- function(remDr, link, interval = 2) {
   get_author_name <- makeGetRemDr(using = "css", 
                                   value = '.fwb  [ajaxify*="member_bio"]',
                                   elem = "text")
@@ -111,7 +105,7 @@ process_post <- function(remDr, link) {
                                    elem = "text")
   
   mainWindow <- unlist(remDr$getCurrentWindowHandle())
-  script <- paste0('window.open("', link, '", "windowName", "height=768,width=1024");')
+  script <- paste0('window.open("', link, '", "windowName", "height=800,width=1280");')
   remDr$executeScript(script)
   newWindow <- remDr$getWindowHandles()[[2]]
   remDr$switchToWindow(newWindow)
@@ -121,6 +115,8 @@ process_post <- function(remDr, link) {
   interactionsCounter <- get_interactions(remDr)
   commentsCounter <- get_comments_counter(remDr)
   postMessage <- get_post_message(remDr)
+  
+  Sys.sleep(interval)
   
   remDr$closeWindow()
   remDr$switchToWindow(mainWindow)
@@ -132,11 +128,49 @@ process_post <- function(remDr, link) {
               postMessage = postMessage)
   out
 }
+getPostsList <- function(remDr) {
+  getPermalinks <- makeGetRemDr(using = "css", 
+                                value = "._5pcq", 
+                                elem = "url", 
+                                method = "all",
+                                attrName = "permalink")
+  getSumrTexts <- makeGetRemDr(using = "css", 
+                               value = "[data-testid='post_message']", 
+                               method = "all",
+                               attrName = "sumrText")
+  
+  permalink <- getPermalinks(remDr)
+  sumrText <- getSumrTexts(remDr)
+  
+  posts_list <- map2(permalink, sumrText, append)
+  posts_list
+}
+enrichPostList <- function(posts_list, remDr){
+  f <- function(x) {
+    r <- processPost(remDr, x[['permalink']])
+    r
+  }
+  enriched_posts_list <- map(posts_list, f)
+  posts_list <- map2(posts_list, enriched_posts_list, append)
+}
+goToEnd <- function(remDr, cycles = 2, interval = 4) {
+  webElem <- remDr$findElement("css", "body")
+  for (i in 1:cycles){
+    webElem$sendKeysToElement(list(key = "end"))
+    Sys.sleep(interval)  
+  }
+}
 # Start Session ####
-remDr <- startSession(port = 4567L, 
-                      browser = "chrome", 
-                      chromever = "74.0.3729.6", 
-                      verbose = FALSE)
+# eCaps <- list(chromeOptions = list(
+#   args = c('--headless', '--window-size=1280,800')
+# ))
+rD <-rsDriver(port = 4567L, 
+              browser = "chrome", 
+              chromever = "74.0.3729.6", 
+              verbose = FALSE)#,
+# extraCapabilities = eCaps)
+remDr <- rD$client
+
 
 # Login ####
 my_email <- read_rds("data/my_email.rds")
@@ -148,48 +182,23 @@ group_id <- read_rds("data/group_id.rds")
 openGroup(group_id)
 
 # Get all permalinks and summary texts on page ####
-getPermalinks <- makeGetRemDr(using = "css", 
-                              value = "._5pcq", 
-                              elem = "url", 
-                              method = "all",
-                              attrName = "permalink")
-getSumrTexts <- makeGetRemDr(using = "css", 
-                             value = "[data-testid='post_message']", 
-                             method = "all",
-                             attrName = "sumrText")
-
-permalink <- getPermalinks(remDr)
-sumrText <- getSumrTexts(remDr)
-
-posts_list <- map2(permalink, sumrText, append)
-
+posts_list <- getPostsList(remDr)
 # Enter on each permalink and extract post features  ####
-process_post(remDr, posts_list[["permalink"]][1])
-
-enrichPostList <- function(posts_list, remDr){
-  f <- function(x) {
-    r <- process_post(remDr, x[['permalink']])
-    x <- append(x, r)
-    r
-  }
-  posts_list <- map(posts_list, f)
-  posts_list
-}
-
-enriched_posts_list <- enrichPostList(posts_list[1:3], remDr)
-
-
-#### NOW ###
-
-# scroll down to the end####
-to_end
-webElem <- remDr$findElement("css", "body")
-webElem$sendKeysToElement(list(key = "end"))
+postsLists <- enrichPostList(posts_list, remDr)
+# Sroll down to the end of current page and get permalinks and sumrTexts####
+goToEnd(remDr)
 #get new links and sumr texts
+nw_posts_list <- getPostsList(remDr)
+# append new nwPosts_List to erinched_posts_list
+getPermalinks <- function(posts_list) {
+  permalinks <- map(posts_list, function(post){})
+  permalinks
+}
+previousP
 #enrich those
 #repeat
-
-
+# Utils ####
+remDr$screenshot(display = TRUE)
 remDr$close()
 rD$server$stop()
 rD$server$process
