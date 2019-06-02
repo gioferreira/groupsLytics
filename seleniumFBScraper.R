@@ -5,6 +5,18 @@ library(purrr)
 source("src/utils/not_in.R")
 
 # Define core functions ####
+
+stopSession <- function(rD, 
+                        rm = TRUE #Remove vars before Quit
+){
+  rD$client$closeall()
+  rD$server$stop()
+  out <- rD$server$process
+  if (rm == TRUE) {
+    rm(list = c("rD", "remDr"), pos = ".GlobalEnv")
+  }
+  out
+}
 loginFB <- function(remDr, login_url, my_email, my_pass) {
   remDr$navigate(login_url)
   
@@ -197,9 +209,7 @@ getPermalinks <- function(posts_list) {
 previousP
 #enrich those
 #repeat
+# Stop Session ####
+stopSession(rD)
 # Utils ####
 remDr$screenshot(display = TRUE)
-remDr$close()
-rD$server$stop()
-rD$server$process
-
