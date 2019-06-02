@@ -7,6 +7,6 @@ newspaper, be gentle with the server.
 
 ## Requirements
 
-RSelenium, TidyVerse (mainly Dplyr and Magrittr, as of now).
+RSelenium, TidyVerse (mainly purr as of now).
 
 In the future I'll try to load only what I really need from TidyVerse. I'm still on an exploratory phase
