@@ -30,7 +30,6 @@ openGroup <- function(group_id, sorting = "CHRONOLOGICAL"){
                        sorting)
   remDr$navigate(group_url)
 }
-
 find_element <- function(remDr, using, value){
   suppressMessages({
     tryCatch(remDr$findElement(using = using, 
@@ -95,7 +94,6 @@ make_get_remDr <- function(using = "css",  # Argument passed to find_element and
       element
     }
 }
-
 process_post <- function(remDr, link) {
   get_author_name <- make_get_remDr(using = "css", 
                                     value = '.fwb  [ajaxify*="member_bio"]',
