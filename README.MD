@@ -7,6 +7,7 @@ newspaper, be gentle with the server.
 
 ## Requirements
 
-RSelenium, TidyVerse (mainly purrr as of now).
+RSelenium, Purrr, Readr as of now.
+Will probably use Dplyr, GGPlot, Magritr later on.
 
-In the future I'll try to load only what I really need from TidyVerse. I'm still on an exploratory phase
+I'm still on an exploratory phase.

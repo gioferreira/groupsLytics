@@ -1,8 +1,7 @@
 # Load Libraries and tools ####
 library(RSelenium)
-library(tidyverse)
+library(readr)
 library(purrr)
-# library(magrittr)
 source("src/utils/not_in.R")
 
 # Define core functions ####
@@ -30,7 +29,7 @@ openGroup <- function(group_id, sorting = "CHRONOLOGICAL"){
                        sorting)
   remDr$navigate(group_url)
 }
-find_element <- function(remDr, using, value){
+findElement <- function(remDr, using, value){
   suppressMessages({
     tryCatch(remDr$findElement(using = using, 
                                value = value), 
@@ -39,7 +38,7 @@ find_element <- function(remDr, using, value){
              })
   })
 }
-get_link_elem <- function(elem = "text") {
+getLinkElem <- function(elem = "text") {
   if (elem %!in% c("text", "url")) {
     stop('Unknown elem')
   }
@@ -56,12 +55,12 @@ get_link_elem <- function(elem = "text") {
       })
   }
 }
-make_get_remDr <- function(using = "css",  # Argument passed to find_element and them RSelenium
-                           value, # Argument passed to find_element and them RSelenium
-                           elem = "text", # What to extract from links? text or url?
-                           method = "one", # First element or all of them
-                           simplify = "true", # Unlist when length == 1
-                           attrName = NULL) {
+makeGetRemDr <- function(using = "css",  # Argument passed to findElement and them RSelenium
+                         value, # Argument passed to findElement and them RSelenium
+                         elem = "text", # What to extract from links? text or url?
+                         method = "one", # First element or all of them
+                         simplify = "true", # Unlist when length == 1
+                         attrName = NULL) {
   if (elem %!in% c("text", "url")) {
     stop('Unknown elem')
   }
@@ -71,45 +70,45 @@ make_get_remDr <- function(using = "css",  # Argument passed to find_element and
   if (is.null(attrName)) {
     attrName <- elem
   }
-    get_function <- function(remDr) {
-      get_elem <- get_link_elem(elem)
-      if (method == "one") {
-        # element <- remDr$findElement(using = using, value = value)
-        element <- find_element(remDr, using, value)
-        if (class(element)[[1]] == "webElement") {
-          element <- get_elem(element) 
-        }
-      } else if (method == "all") {
-        elements <- remDr$findElements(using = using, value = value)
-        element <- map(elements, get_elem)
+  get_function <- function(remDr) {
+    get_elem <- getLinkElem(elem)
+    if (method == "one") {
+      # element <- remDr$findElement(using = using, value = value)
+      element <- findElement(remDr, using, value)
+      if (class(element)[[1]] == "webElement") {
+        element <- get_elem(element) 
       }
-      renamef <- function(x, attrName){x
-        names(x) <- attrName
-        return(x)
-      }
-      element <- map(element, set_names, nm = attrName)
-      if (length(element) == 1) {
-        element <- unlist(element)
-      }
-      element
+    } else if (method == "all") {
+      elements <- remDr$findElements(using = using, value = value)
+      element <- map(elements, get_elem)
     }
+    renamef <- function(x, attrName){x
+      names(x) <- attrName
+      return(x)
+    }
+    element <- map(element, set_names, nm = attrName)
+    if (length(element) == 1) {
+      element <- unlist(element)
+    }
+    element
+  }
 }
 process_post <- function(remDr, link) {
-  get_author_name <- make_get_remDr(using = "css", 
-                                    value = '.fwb  [ajaxify*="member_bio"]',
-                                    elem = "text")
-  get_author_link <- make_get_remDr(using = "css", 
-                                    value = '.fwb  [ajaxify*="member_bio"]',
-                                    elem = "url")
-  get_interactions <- make_get_remDr(using = "css", 
-                                     value = "._81hb",
-                                     elem = "text")
-  get_comments_counter <- make_get_remDr(using = "css", 
-                                         value = '[data-testid*="CommentsCount"',
-                                         elem = "text")
-  get_post_message <- make_get_remDr(using = "css", 
-                                     value = '[data-testid*="post_message"',
-                                     elem = "text")
+  get_author_name <- makeGetRemDr(using = "css", 
+                                  value = '.fwb  [ajaxify*="member_bio"]',
+                                  elem = "text")
+  get_author_link <- makeGetRemDr(using = "css", 
+                                  value = '.fwb  [ajaxify*="member_bio"]',
+                                  elem = "url")
+  get_interactions <- makeGetRemDr(using = "css", 
+                                   value = "._81hb",
+                                   elem = "text")
+  get_comments_counter <- makeGetRemDr(using = "css", 
+                                       value = '[data-testid*="CommentsCount"',
+                                       elem = "text")
+  get_post_message <- makeGetRemDr(using = "css", 
+                                   value = '[data-testid*="post_message"',
+                                   elem = "text")
   
   mainWindow <- unlist(remDr$getCurrentWindowHandle())
   script <- paste0('window.open("', link, '", "windowName", "height=768,width=1024");')
@@ -149,25 +148,25 @@ group_id <- read_rds("data/group_id.rds")
 openGroup(group_id)
 
 # Get all permalinks and summary texts on page ####
-get_permalinks <- make_get_remDr(using = "css", 
-                                 value = "._5pcq", 
-                                 elem = "url", 
-                                 method = "all",
-                                 attrName = "permalink")
-get_sumr_texts <- make_get_remDr(using = "css", 
-                                 value = "[data-testid='post_message']", 
-                                 method = "all",
-                                 attrName = "sumrText")
+getPermalinks <- makeGetRemDr(using = "css", 
+                              value = "._5pcq", 
+                              elem = "url", 
+                              method = "all",
+                              attrName = "permalink")
+getSumrTexts <- makeGetRemDr(using = "css", 
+                             value = "[data-testid='post_message']", 
+                             method = "all",
+                             attrName = "sumrText")
 
-permalink <- get_permalinks(remDr)
-sumrText <- get_sumr_texts(remDr)
+permalink <- getPermalinks(remDr)
+sumrText <- getSumrTexts(remDr)
 
 posts_list <- map2(permalink, sumrText, append)
 
 # Enter on each permalink and extract post features  ####
 process_post(remDr, posts_list[["permalink"]][1])
 
-enrich_post_list <- function(posts_list, remDr){
+enrichPostList <- function(posts_list, remDr){
   f <- function(x) {
     r <- process_post(remDr, x[['permalink']])
     x <- append(x, r)
@@ -177,12 +176,15 @@ enrich_post_list <- function(posts_list, remDr){
   posts_list
 }
 
-enriched_posts_list <- enrich_post_list(posts_list[1:3], remDr)
+enriched_posts_list <- enrichPostList(posts_list[1:3], remDr)
 
 
 #### NOW ###
 
-# scroll down ####
+# scroll down to the end####
+to_end
+webElem <- remDr$findElement("css", "body")
+webElem$sendKeysToElement(list(key = "end"))
 #get new links and sumr texts
 #enrich those
 #repeat
