@@ -6,6 +6,7 @@ processPost <- function(remDr, permalink, interval = 2) {
   getInteractions <- do.call(makeGetFunction, elementsArgs$interactions_args)
   getCommentsCounter <- do.call(makeGetFunction, elementsArgs$comments_counter_args)
   getPostMessage <- do.call(makeGetFunction, elementsArgs$post_message_args)
+  getPostDate <- do.call(makeGetFunction, elementsArgs$post_date_args)
   
   mainWindow <- unlist(remDr$getCurrentWindowHandle())
   script <- paste0('window.open("', permalink, '", "windowName", "height=800,width=1280");')
@@ -13,18 +14,24 @@ processPost <- function(remDr, permalink, interval = 2) {
   newWindow <- remDr$getWindowHandles()[[2]]
   remDr$switchToWindow(newWindow)
   
+  scrapeTime <- Sys.time()
+  postDate <- getPostDate(remDr)
   authorName <- getAuthorName(remDr)
   authorLink <- getAuthorLink(remDr)
   interactionsCounter <- getInteractions(remDr)
   commentsCounter <- getCommentsCounter(remDr)
   postMessage <- getPostMessage(remDr)
   
+  
+  
   Sys.sleep(interval)
   
   remDr$closeWindow()
   remDr$switchToWindow(mainWindow)
   
-  out <- list(authorName = authorName,
+  out <- list(scrapeTime = scrapeTime,
+              postDate = postDate,
+              authorName = authorName,
               authorLink = authorLink,
               interactionsCounter = interactionsCounter,
               commentsCounter = commentsCounter,

@@ -18,9 +18,9 @@ makeGetFunction <- function(appendName = TRUE, # @todo test with false
                           simplify = TRUE # Unlist when length == 1
   ){ 
     source("src/findElement.R")
-    source("src/processLinkElem.R")
+    source("src/processElem.R")
     element <- findElement(remDr, ...)
-    element <- processLinkElem(element, ...)
+    element <- processElem(element, ...)
     if (appendName == TRUE){
       element <- map(element, set_names, nm = attrName)
     }
