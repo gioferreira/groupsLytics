@@ -16,7 +16,7 @@ loginFB(remDr, my_email, my_pass)
 
 openGroup(group_id)
 posts_list <- getPostsList(remDr)
-posts_list[1:3] %<>% 
+posts_list %<>% 
   enrichPostList(remDr, interval = 1)
 # save enriched_posts_list
 

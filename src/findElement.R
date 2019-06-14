@@ -12,8 +12,8 @@ findElement <- function(remDr,
   suppressMessages({
     tryCatch(
       if (method == "one") {
-        remDr$findElement(using = using, 
-                          value = value)
+        list(remDr$findElement(using = using, 
+                          value = value))
       } else if (method == "all") {
         remDr$findElements(using = using, 
                            value = value)

@@ -15,7 +15,8 @@ makeGetFunction <- function(appendName = TRUE, # @todo test with false
   
   # Define getFunction ####
   getFunction <- function(remDr, 
-                          simplify = TRUE # Unlist when length == 1
+                          simplify = TRUE, # Unlist when length == 1
+                          ... 
   ){ 
     source("src/findElement.R")
     source("src/processElem.R")

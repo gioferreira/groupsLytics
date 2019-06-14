@@ -64,21 +64,22 @@ openGroup <- function(group_id, sorting = "CHRONOLOGICAL"){
 
 getPostsList <- function(remDr) { 
   source("src/makeGetFunction.R")
-  getPermalinks <- makeGetFunction(using = "css", 
-                                   value = "._5pcq", 
-                                   what = "url", 
-                                   method = "all",
-                                   attrName = "permalink")
-  getSumrTexts <- makeGetFunction(using = "css", 
-                                  value = "[data-testid='post_message']",
-                                  what = "text",
-                                  method = "all",
-                                  attrName = "sumrText")
+  getPermalinks <- makeGetFunction(attrName = "permalink")
+  getSumrTexts <- makeGetFunction(attrName = "sumrText")
   
-  permalinks <- getPermalinks(remDr)
-  sumrText <- getSumrTexts(remDr)
+  permalinks <- getPermalinks(remDr,
+                              using = "css", 
+                              value = "._5pcq", 
+                              what = "url", 
+                              method = "all")
+  sumrText <- getSumrTexts(remDr,
+                           using = "css", 
+                           value = "[data-testid='post_message']",
+                           what = "text",
+                           method = "all",)
   
-  posts_list <- map2(permalinks, sumrText, append)
+  # posts_list <- map2(permalinks, sumrText, append)
+  posts_list <- permalinks
   posts_list
 } # Get all permalinks and summary texts on current page
 
