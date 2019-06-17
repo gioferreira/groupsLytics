@@ -107,7 +107,15 @@ goToEnd <- function(remDr,
   return(NA)
 } 
 
-getPermalinks <- function(posts_list) {
-  permalinks <- map(posts_list, function(post){})
-  permalinks
-}
+appendNew <- function(posts_list, nw_posts_list) {
+  source("src/getPermalinks.R")
+  previous_permalinks <- getPermalinks(posts_list)
+ 
+   f <- function(nw_post) {
+    if (nw_post[['permalink']] %!in% previous_permalinks) { nw_post }
+  }
+  
+  posts_list %>% 
+    append(compact(map(nw_posts_list, f))) %>%
+    return()
+} # Given x and y lists, appends only the new/different elements from the y to x

@@ -15,19 +15,28 @@ startSession()
 loginFB(remDr, my_email, my_pass)
 
 openGroup(group_id)
+
 posts_list <- getPostsList(remDr)
 posts_list %<>% 
   enrichPostList(remDr, interval = 1)
-# save enriched_posts_list
+
+# Save and/or open enriched_posts_list
+outfile <- paste0("data/posts_list-", Sys.Date(), ".rds")
+write_rds(posts_list, outfile)
+
+posts_list <- read_rds(outfile)
 
 # Sroll down to the end of current page and get permalinks and sumrTexts
 goToEnd(remDr, cycles = 2)
 nw_posts_list <- getPostsList(remDr)
 
-# append new nwPosts_List to erinched_posts_list
-previous_permalinks <- getPermalinks(posts_list)
+# append new nw_posts_List to posts_list
+posts_list %<>%
+  appendNew(nw_posts_list)
 
-#enrich those
+posts_list[lengths(posts_list) == 1] %<>%
+  enrichPostList(remDr, interval = 1)
+
 #repeat
 # Stop Session ####
 stopSession(rD)
