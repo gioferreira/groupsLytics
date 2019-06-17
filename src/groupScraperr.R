@@ -72,6 +72,10 @@ getPostsList <- function(remDr) {
                               value = "._5pcq", 
                               what = "url", 
                               method = "all")
+  
+  # @TODO permalinks are selecting permalinks for locations (vargem grande) when available.
+  # maybe clean up permalinks before return or change the css selector
+  
   sumrText <- getSumrTexts(remDr,
                            using = "css", 
                            value = "[data-testid='post_message']",
