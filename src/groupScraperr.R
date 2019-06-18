@@ -17,6 +17,13 @@ groupScraperr <- function(my_email,
                           return_tbl = FALSE,
                           ...) {
   source("src/baseScraperr.R")
+  saveList <- function(){
+    if (save_list == TRUE) {
+      file_name <- paste0("posts_list-", Sys.Date())
+      save_path <- paste0("data/", file_name, ".rds")
+      write_rds(posts_list, save_path)
+    }
+  }
   
   startSession(...)
   loginFB(remDr, my_email, my_pass)
@@ -27,37 +34,38 @@ groupScraperr <- function(my_email,
   } else {
     posts_list <- read_rds(saved_list)
   }
-  
+  posts_list_init_len <- length(posts_list)
   counter <- 0
+  print(paste0("posts_list initial length: ", posts_list_init_len))
   while (counter < count) {
-    posts_list_init_len <- length(posts_list)
-    
-    # Get Posts on Screen
+  # Get Posts on Screen
     nw_posts_list <- getPostsList(remDr)
     
     # append new nw_posts_List to posts_list
     posts_list %<>%
       appendNew(nw_posts_list)
     
-    posts_list_final_len <- length(posts_list)
-    counter <- posts_list_final_len - posts_list_init_len
+    counter <- (length(posts_list) - posts_list_init_len)
+    
+    saveList()
+    print(paste0("posts added so far: ", counter))
     
     # Enrich posts with only 1 attr (hopefully permalink)
     posts_list[lengths(posts_list) == 1] %<>%
       enrichPostList(remDr, ...)
-    print(paste0(counter, "post(s) added so far"))
-    
+    saveList()
+    print(paste0("posts enriched so far: ", counter))
     # Sroll down to the end of current page
-    goToEnd(remDr, ...)
+    # goToEnd(remDr, ...)
+    remDr$executeScript("window.scrollTo(0,document.body.scrollHeight);")
   }
+  
+  posts_list_final_len <- length(posts_list)
+  print(paste0("posts_list final length: ", posts_list_final_len))
+  print(paste0("Total posts added: ", posts_list_final_len - posts_list_init_len))
+  saveList()
   
   stopSession(rD)
-  
-  if (save_list == TRUE) {
-    file_name <- paste0("posts_list-", Sys.Date())
-    save_path <- paste0("data/", file_name, ".rds")
-    write_rds(posts_list, save_path)
-  }
   
   if (return_tbl == TRUE) {
     posts_tbl <- map(posts_list, function(post) {as_tibble(post)} )

@@ -21,11 +21,14 @@ saved_list <- "data/posts_list-2019-06-17.rds"
 groupScraperr(my_email = my_email, 
               my_pass = my_pass, 
               group_id = group_id,
-              count = 6,
-              save_list = TRUE,
+              count = 15,
+              save_list = FALSE,
               saved_list = saved_list, # Can be ommitted 
-              interval = 2,
+              interval = 1,
               return_tbl = TRUE,
               headless = FALSE,
               gpu = TRUE,
-              print  = FALSE)
+              print  = TRUE)
+
+
+

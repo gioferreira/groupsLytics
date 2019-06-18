@@ -104,7 +104,7 @@ enrichPostList <- function(posts_list, remDr, ...){
 } # Enter on each permalink and extract post features defined in processPost()
 
 goToEnd <- function(remDr, 
-                    cycles = 2, # Number of "end" key to be sent to remDr
+                    cycles, # Number of "end" key to be sent to remDr
                     interval = 4, # Seconds between each key
                     ...
 ) { 
@@ -113,7 +113,6 @@ goToEnd <- function(remDr,
     body$sendKeysToElement(list(key = "end"))
     Sys.sleep(interval)  
   }
-  remDr$screenshot(display = FALSE)
   return(NA)
 } 
 
