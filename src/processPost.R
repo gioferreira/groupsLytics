@@ -4,6 +4,7 @@ processPost <- function(remDr,
                         print,
                         ...) {
   source("src/getElementsArgs.R")
+  source("src/printScreen.R")
   elementsArgs <- getElementsArgs()
   getPostDate <- do.call(makeGetFunction, elementsArgs$post_date_args)
   getAuthorName <- do.call(makeGetFunction, elementsArgs$author_name_args)
@@ -19,8 +20,10 @@ processPost <- function(remDr,
   newWindow <- remDr$getWindowHandles()[[2]]
   remDr$switchToWindow(newWindow)
   
+  remDr$executeScript('document.body.style.zoom="80%";')
+  remDr$executeScript("window.scrollTo(0,310);")
+  
   scrapeTime <- Sys.time()
-  # getPostDate(remDr, using = "css", value = 'abbr[class*=\"timestamp\"]', method = "one", what = "title", attrName = "postDate")
   
   postDate <- do.call(getPostDate, 
                       c(remDr = remDr, 
@@ -44,10 +47,9 @@ processPost <- function(remDr,
   
   
   Sys.sleep(interval)
+  
   if (print == TRUE) {
-    filename <- paste0(gsub(":", "-", as.character(Sys.time())), ".png")
-    filepath <- paste0("data/imgs/", filename)
-    remDr$screenshot(file = filepath) 
+    printScreen(remDr)
   }
 
   remDr$closeWindow()
