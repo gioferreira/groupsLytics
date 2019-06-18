@@ -15,7 +15,7 @@ group_id <- read_rds("data/group_id.rds")
 
 
 # If there's a previous list
-saved_list <- "data/posts_list-2019-06-18.rds"
+saved_list <- "data/posts_list-2019-06-17.rds"
 
 
 groupScraperr(my_email = my_email, 
@@ -25,9 +25,7 @@ groupScraperr(my_email = my_email,
               save_list = TRUE,
               saved_list = saved_list, # Can be ommitted 
               interval = 2,
-              return_tbl = TRUE)
-
-
-
-
-
+              return_tbl = TRUE,
+              headless = FALSE,
+              gpu = TRUE,
+              print  = FALSE)

@@ -4,7 +4,7 @@ library(purrr)
 
 
 # Define base functions ####
-startSession <- function(headless = FALSE, # @todo test with headless = TRUE
+startSession <- function(headless, # @todo test with headless = TRUE
                          gpu = TRUE,
                          windowSize = "1280,800",
                          port = 4567L,
@@ -12,6 +12,7 @@ startSession <- function(headless = FALSE, # @todo test with headless = TRUE
   args <- c()
   if (headless == TRUE) { args <- append(args, '--headless') }
   if (gpu == FALSE) { args <- append(args, '--disable-gpu') }
+  args <- append(args, '--disable-notifications')
   args <- append(args, paste0('--window-size=', windowSize))
   eCaps <- list(chromeOptions = list(
     args = args))
@@ -19,11 +20,8 @@ startSession <- function(headless = FALSE, # @todo test with headless = TRUE
   rD <-rsDriver(port = port, 
                 browser = "chrome", 
                 chromever = "74.0.3729.6", 
-                verbose = FALSE#,
-                # @todo implement extraCapabilities specially to be able to use headless
-                # extraCapabilities = eCaps
-                # @todo is there a chromeOptions to default to "no notifications" ? 
-  )
+                verbose = FALSE,
+                extraCapabilities = eCaps)
   remDr <- rD$client
   out <- list(rD = rD, remDr = remDr)
   list2env(out, envir = .GlobalEnv)
@@ -107,7 +105,8 @@ enrichPostList <- function(posts_list, remDr, ...){
 
 goToEnd <- function(remDr, 
                     cycles = 2, # Number of "end" key to be sent to remDr
-                    interval = 4 # Seconds between each key
+                    interval = 4, # Seconds between each key
+                    ...
 ) { 
   body <- remDr$findElement("css", "body")
   for (i in 1:cycles){
