@@ -1,4 +1,8 @@
-processPost <- function(remDr, permalink, interval, ...) {
+processPost <- function(remDr, 
+                        permalink, 
+                        interval, 
+                        print,
+                        ...) {
   source("src/getElementsArgs.R")
   elementsArgs <- getElementsArgs()
   getPostDate <- do.call(makeGetFunction, elementsArgs$post_date_args)
@@ -40,7 +44,12 @@ processPost <- function(remDr, permalink, interval, ...) {
   
   
   Sys.sleep(interval)
-  
+  if (print == TRUE) {
+    filename <- paste0(gsub(":", "-", as.character(Sys.time())), ".png")
+    filepath <- paste0("data/imgs/", filename)
+    remDr$screenshot(file = filepath) 
+  }
+
   remDr$closeWindow()
   remDr$switchToWindow(mainWindow)
   
