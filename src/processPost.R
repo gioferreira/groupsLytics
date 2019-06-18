@@ -1,4 +1,4 @@
-processPost <- function(remDr, permalink, interval = 2) {
+processPost <- function(remDr, permalink, interval, ...) {
   source("src/getElementsArgs.R")
   elementsArgs <- getElementsArgs()
   getPostDate <- do.call(makeGetFunction, elementsArgs$post_date_args)
