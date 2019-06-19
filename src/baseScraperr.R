@@ -19,7 +19,7 @@ startSession <- function(headless, # @todo test with headless = TRUE
   # @todo implement version using docker instead of rsDriver()
   rD <-rsDriver(port = port, 
                 browser = "chrome", 
-                chromever = "75.0.3770.90", 
+                chromever = "74.0.3729.6", 
                 verbose = FALSE,
                 extraCapabilities = eCaps)
   remDr <- rD$client
