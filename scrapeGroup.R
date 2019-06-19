@@ -4,6 +4,8 @@ library(readr)
 library(tibble)
 library(dplyr)
 
+library(tictoc)
+
 source("src/groupScraperr.R")
 
 # Scrape Specific Group ####
@@ -15,20 +17,17 @@ group_id <- read_rds("data/group_id.rds")
 
 
 # If there's a previous list
-saved_list <- "data/posts_list-2019-06-17.rds"
+saved_list <- "data/posts_list-2019-06-19.rds"
 
-
+tic()
 groupScraperr(my_email = my_email, 
               my_pass = my_pass, 
               group_id = group_id,
-              count = 15,
-              save_list = FALSE,
+              count = 1500,
+              save_list = TRUE,
               saved_list = saved_list, # Can be ommitted 
-              interval = 1,
+              interval = 7,
               return_tbl = TRUE,
               headless = FALSE,
-              gpu = TRUE,
-              print  = TRUE)
-
-
-
+              print  = FALSE)
+toc()
