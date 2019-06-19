@@ -29,7 +29,7 @@ getElementsArgs <- function(){
                             what = "text",
                             attrName = "postMessage")
   post_date_args <- list(using = "css",
-                         value = 'abbr[class*="timestamp"]',
+                         value = 'abbr[class*="_5ptz"]',
                          method = "one",
                          what = "title",
                          attrName = "postDate")
