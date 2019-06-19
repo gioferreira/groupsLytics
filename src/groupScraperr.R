@@ -50,14 +50,16 @@ groupScraperr <- function(my_email,
     saveList()
     print(paste0("posts added so far: ", counter))
     
+    posts_to_enrich <- length(posts_list[lengths(posts_list) == 1])
+    print(paste0("posts to enrich: ", posts_to_enrich))
     # Enrich posts with only 1 attr (hopefully permalink)
     posts_list[lengths(posts_list) == 1] %<>%
       enrichPostList(remDr, ...)
     saveList()
-    print(paste0("posts enriched so far: ", counter))
+    print("posts enriched, scrolling down")
     # Sroll down to the end of current page
-    # goToEnd(remDr, ...)
-    remDr$executeScript("window.scrollTo(0,document.body.scrollHeight);")
+    goToEnd(...)
+    
   }
   
   posts_list_final_len <- length(posts_list)
