@@ -103,18 +103,26 @@ enrichPostList <- function(posts_list, remDr, ...){
   posts_list
 } # Enter on each permalink and extract post features defined in processPost()
 
-goToEnd <- function(remDr, 
-                    cycles, # Number of "end" key to be sent to remDr
-                    interval = 4, # Seconds between each key
-                    ...
-) { 
-  body <- remDr$findElement("css", "body")
+# goToEnd <- function(remDr, 
+#                     cycles, # Number of "end" key to be sent to remDr
+#                     interval = 4, # Seconds between each key
+#                     ...
+# ) { 
+#   body <- remDr$findElement("css", "body")
+#   for (i in 1:cycles){
+#     body$sendKeysToElement(list(key = "end"))
+#     Sys.sleep(interval)  
+#   }
+#   return(NA)
+# } 
+
+goToEnd <- function(cycles, wait = 1, ...) {
   for (i in 1:cycles){
-    body$sendKeysToElement(list(key = "end"))
-    Sys.sleep(interval)  
+    remDr$executeScript("window.scrollTo(0,document.body.scrollHeight);")
+    Sys.sleep(wait)
   }
   return(NA)
-} 
+}
 
 appendNew <- function(posts_list, nw_posts_list) {
   source("src/getPermalinks.R")

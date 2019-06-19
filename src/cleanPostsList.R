@@ -16,3 +16,4 @@ cleanPostsList <- function(posts_list) {
   cleaned_list <- map(posts_list, cleanPost)
   compact(cleaned_list)
 }
+

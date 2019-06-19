@@ -26,6 +26,7 @@ groupScraperr(my_email = my_email,
               count = 1500,
               save_list = TRUE,
               saved_list = saved_list, # Can be ommitted 
+              cycles = 4,
               interval = 7,
               return_tbl = TRUE,
               headless = FALSE,
